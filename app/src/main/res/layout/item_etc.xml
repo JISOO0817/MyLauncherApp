@@ -7,7 +7,6 @@
         <variable
             name="dataInfo"
             type="kr.co.hdtel.mylauncherapp.data.DataInfo" />
-
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
