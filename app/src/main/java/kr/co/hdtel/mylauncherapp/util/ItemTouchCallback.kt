@@ -10,6 +10,7 @@ package kr.co.hdtel.mylauncherapp.util
 
 import android.annotation.SuppressLint
 import android.graphics.Canvas
+import android.util.Log
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 

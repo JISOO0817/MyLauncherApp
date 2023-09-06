@@ -1,6 +1,7 @@
 package kr.co.hdtel.mylauncherapp.util
 
 import android.util.Log
+import android.view.View
 import androidx.databinding.BindingAdapter
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -27,16 +28,17 @@ object LauncherBindingAdapter {
         editLayoutManager.spanSizeLookup = spanSizeLookup
         this.layoutManager = editLayoutManager
 
-        val adapter = (this.adapter as? MyAdapter) ?: MyAdapter(onAdapterListener)
+        val adapter = (this.adapter as? MyAdapter) ?: MyAdapter(onAdapterListener,true)
             .also {
                 this.adapter = it
-                val helper = this@bindRecyclerView.tag as? ItemTouchHelper ?: run {
-                    val newHelper = ItemTouchHelper(ItemTouchCallback(it))
-                    this@bindRecyclerView.tag = newHelper
-                    newHelper
-                }
-
-                helper.attachToRecyclerView(this@bindRecyclerView)
+                this.setOnDragListener(it.dragListener)
+//                val helper = this@bindRecyclerView.tag as? ItemTouchHelper ?: run {
+//                    val newHelper = ItemTouchHelper(ItemTouchCallback(it))
+//                    this@bindRecyclerView.tag = newHelper
+//                    newHelper
+//                }
+//
+//                helper.attachToRecyclerView(this@bindRecyclerView)
             }
 
         Log.d("sss","data:${data}")
