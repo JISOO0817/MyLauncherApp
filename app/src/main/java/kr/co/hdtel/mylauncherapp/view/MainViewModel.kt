@@ -23,7 +23,6 @@ class MainViewModel : ViewModel() {
         }
 
         _items.value = initData
-        Log.d("sss", "items:${items.value}")
     }
 
 //    private fun setItemPosition(list: List<DataInfo?>): List<DataInfo?> {
@@ -61,13 +60,11 @@ class MainViewModel : ViewModel() {
 //    }
 
     fun onItemSwap(list: List<DataInfo?>, from: Int, to: Int) {
-        Log.d("sss", "onItemSwap call(), before:${list}, from:${from},to:${to}")
         val data = list.toMutableList()
         //뒤에있던 아이템을 앞으로 당기면 하나씩 뒤로 이동
         shiftItem(data, from, to)
 //        Collections.swap(data, from, to)
         _items.value = data
-        Log.d("sss", "after:${data}")
     }
 
     private fun shiftItem(list: List<DataInfo?>, from: Int, to: Int) {

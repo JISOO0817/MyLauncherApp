@@ -13,6 +13,7 @@ import kr.co.hdtel.mylauncherapp.databinding.ItemLargeBinding
 import kr.co.hdtel.mylauncherapp.databinding.ItemNullBinding
 import kr.co.hdtel.mylauncherapp.databinding.ItemSmallBinding
 import kr.co.hdtel.mylauncherapp.util.ItemTouchListener
+import kr.co.hdtel.mylauncherapp.util.MyShadowBuilder
 import kr.co.hdtel.mylauncherapp.util.RecyclerViewDragAdapter
 import java.util.*
 
@@ -109,13 +110,15 @@ class MyAdapter(private val onAdapterListener: OnAdapterListener, override val i
             binding.nameTv.text = item?.name
 
             binding.root.setOnLongClickListener { view ->
+                Log.d("sss","view:longclick")
                 view.animate()
-                val clipData = ClipData.newPlainText("", "")
-                val shadowBuilder = View.DragShadowBuilder(view)
+                val clipData = ClipData.newPlainText("","")
+//                view.background = null
+                val shadowBuilder = MyShadowBuilder(view)
                 view?.startDragAndDrop(clipData, shadowBuilder, view, 0)
+//                view.visibility = View.INVISIBLE
                 false
             }
-
             binding.root.setOnDragListener(dragListener)
         }
     }
@@ -129,7 +132,7 @@ class MyAdapter(private val onAdapterListener: OnAdapterListener, override val i
 
             binding.root.setOnLongClickListener { view ->
                 val clipData = ClipData.newPlainText("", "")
-                val shadowBuilder = View.DragShadowBuilder(view)
+                val shadowBuilder = View.DragShadowBuilder()
                 view?.startDragAndDrop(clipData, shadowBuilder, view, 0)
                 false
             }
@@ -146,7 +149,7 @@ class MyAdapter(private val onAdapterListener: OnAdapterListener, override val i
             binding.root.setOnLongClickListener { view ->
                 val clipData = ClipData.newPlainText("", "")
                 val shadowBuilder = View.DragShadowBuilder(view)
-                view?.startDragAndDrop(clipData, shadowBuilder, view, 0)
+                view?.startDragAndDrop(clipData, shadowBuilder, null, 0)
                 false
             }
             binding.root.setOnDragListener(dragListener)
@@ -189,7 +192,7 @@ class MyAdapter(private val onAdapterListener: OnAdapterListener, override val i
                 oldItem: DataInfo,
                 newItem: DataInfo
             ) =
-                oldItem == newItem
+                oldItem.name == newItem.name
         }
     }
 
@@ -231,13 +234,22 @@ class MyAdapter(private val onAdapterListener: OnAdapterListener, override val i
     }
 
     override fun onSwap(from: Int, to: Int) {
-        if (currentList[to] == null || currentList[from] == null) {
-            return
-        }
+//        if (currentList[to] == null || currentList[from] == null) {
+//            return
+//        }
+
+//        val newList = currentList.toMutableList()
+//        shiftItem(newList, from, to)
+
+
         onAdapterListener.swapOnViewModel(currentList.toMutableList(),from,to)
     }
 
     override fun onRemove(item: DataInfo) {
         //
+    }
+
+    override fun dragDropType(type: DragDropType) {
+        TODO("Not yet implemented")
     }
 }
