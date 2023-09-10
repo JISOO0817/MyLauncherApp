@@ -62,22 +62,22 @@ class MainViewModel : ViewModel() {
     fun onItemSwap(list: List<DataInfo?>, from: Int, to: Int) {
         val data = list.toMutableList()
         //뒤에있던 아이템을 앞으로 당기면 하나씩 뒤로 이동
-        shiftItem(data, from, to)
+//        shiftItem(data, from, to)
 //        Collections.swap(data, from, to)
         _items.value = data
     }
 
-    private fun shiftItem(list: List<DataInfo?>, from: Int, to: Int) {
-        return if (from < to) {
-            for (i in from until to) {
-                Collections.swap(list, i, i + 1)
-            }
-        } else {
-            for (i in from downTo to + 1) {
-                Collections.swap(list, i, i - 1)
-            }
-        }
-    }
+//    private fun shiftItem(list: List<DataInfo?>, from: Int, to: Int) {
+//        return if (from < to) {
+//            for (i in from until to) {
+//                Collections.swap(list, i, i + 1)
+//            }
+//        } else {
+//            for (i in from downTo to + 1) {
+//                Collections.swap(list, i, i - 1)
+//            }
+//        }
+//    }
 
     //            add(DataInfo(DataInfo.ITEM_TYPE_LARGE, "D","10,000"))
 //            add(DataInfo(DataInfo.ITEM_TYPE_LARGE, "E","15,000"))

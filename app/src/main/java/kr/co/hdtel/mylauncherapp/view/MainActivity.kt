@@ -8,6 +8,7 @@ import androidx.databinding.DataBindingUtil
 import kr.co.hdtel.mylauncherapp.R
 import kr.co.hdtel.mylauncherapp.data.DataInfo
 import kr.co.hdtel.mylauncherapp.databinding.ActivityMainBinding
+import kr.co.hdtel.mylauncherapp.util.MyShadowBuilder
 import kr.co.hdtel.mylauncherapp.util.SpanSize
 
 class MainActivity : AppCompatActivity(), MyAdapter.OnAdapterListener {
@@ -23,9 +24,7 @@ class MainActivity : AppCompatActivity(), MyAdapter.OnAdapterListener {
         viewModel.setInitData()
     }
 
-    private fun setUpView() {
-
-    }
+    private fun setUpView() {}
 
     private fun setUpBinding() {
         binding = DataBindingUtil.setContentView(this@MainActivity,R.layout.activity_main)

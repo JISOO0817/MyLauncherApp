@@ -1,50 +1,48 @@
 package kr.co.hdtel.mylauncherapp.util
 
 import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Point
+import android.graphics.drawable.ColorDrawable
+import android.util.Log
 import android.view.View
+import kr.co.hdtel.mylauncherapp.R
 
 class MyShadowBuilder(view: View): View.DragShadowBuilder(view) {
-    private lateinit var shadow: View
+    private var shadow: View
+    private var width = 0
+    private var height = 0
 
     init {
-        setViewpoint()
-    }
-
-    private fun setViewpoint() {
         shadow = view
-//        shadow.background = R.
-//        shadow.background =
     }
 
-    // Defines a callback that sends the drag shadow dimensions and touch point
-    // back to the system.
     override fun onProvideShadowMetrics(size: Point, touch: Point) {
-        touch.x = shadow.x.toInt()
-        touch.y = shadow.y.toInt()
-        // Set the width of the shadow to half the width of the original View.
-        val width: Int = (view.width * 1.4).toInt()
-
-        // Set the height of the shadow to half the height of the original View.
-        val height: Int = (view.height * 1.4).toInt()
-
-        // The drag shadow is a ColorDrawable. This sets its dimensions to be the
-        // same as the Canvas that the system provides. As a result, the drag shadow
-        // fills the Canvas.
-//        shadow.setBounds(0, 0, width, height)
-
-        // Set the size parameter's width and height values. These get back to
-        // the system through the size parameter.
+        val originWidth = view.width
+        val originHeight = view.height
+        width = (view.width*1.2f).toInt()
+        height = (view.height*1.2f).toInt()
         size.set(width, height)
-
-        // Set the touch point's position to be in the middle of the drag shadow.
-        touch.set(width / 2, height / 2)
+        touch.set(originWidth/2, originHeight/2)
     }
 
     override fun onDrawShadow(canvas: Canvas?) {
-        // Draw the ColorDrawable on the Canvas passed in from the system.
-        canvas?.let { cv ->
-            shadow.draw(cv)
-        }
+        val pnt = Paint()
+        pnt.alpha = 255
+        pnt.color = Color.GREEN
+//        view.alpha = 1f
+        canvas?.drawRect(0f,0f,(width).toFloat(), (height).toFloat(), pnt)
+
+//        val shadowPaint = Paint()
+//        shadow.alpha = 1f
+//        val originBac = view.background
+//        shadow.background = C/olorDrawable(Color.BLUE)
+//        canvas?.let {
+//            Log.d("sss", "canvas...")
+//            it.drawRect(0f, 0f, view.width.toFloat(), view.height.toFloat(), shadowPaint)
+//            view.draw(it)
+//        }
+//            view.background = originBac
     }
 }

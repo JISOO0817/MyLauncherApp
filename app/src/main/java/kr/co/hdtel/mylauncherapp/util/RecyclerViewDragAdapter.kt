@@ -16,6 +16,7 @@ import android.view.View
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import kr.co.hdtel.mylauncherapp.R
 
 
 abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
@@ -23,18 +24,22 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
 ) : ListAdapter<T, VH>(diffUtil) {
     abstract val isSwappable: Boolean
     private val dragDropType: DragDropType = DragDropType.SHADOW
-    private var originDX = 0f
-    private var originDY = 0f
+//    private lateinit var shadowBuilder:MyShadowBuilder
+
     val dragListener = View.OnDragListener { view, event ->
+//        shadowBuilder = MyShadowBuilder(view)
         event?.let {
             //시작 위치
             when (it.action) {
                 DragEvent.ACTION_DRAG_STARTED -> {
+//                    val sourceView = it.localState as View
+//                    sourceView.alpha = 0f
                     Log.d("sss", "***** drag event started *****")
                 }
 
                 DragEvent.ACTION_DRAG_ENTERED -> {
                     Log.d("sss", "*** drag event entered *****")
+//                    shadowBuilder.view.background = null
                     val holdingView = it.localState as View
                     view.scaleX
                     val holdingRecyclerView = holdingView.parent as RecyclerView
@@ -64,7 +69,7 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
                                     return@OnDragListener false
                                 }
                                 Log.d("sss","holdingPos:${holdingPosition}, target:${targetPosition}")
-                                holdingAdapter.onSwap(holdingPosition, targetPosition)
+                                holdingAdapter.onSwap(false, holdingPosition, targetPosition)
                             }
                         }
 //
@@ -74,72 +79,70 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
                 }
 
                 DragEvent.ACTION_DROP -> {
-                    val holdingView = it.localState as View
-                    val holdingRecyclerView = holdingView.parent as RecyclerView
-                    val holdingAdapter =
-                        holdingRecyclerView.adapter as RecyclerViewDragAdapter<*, *>
-                    val holdingPosition = holdingRecyclerView.getChildAdapterPosition(holdingView)
-                    holdingView.visibility = View.VISIBLE
-//                        val sourceView = it.localState as View
-//                        val sourceRecyclerView = sourceView.parent as RecyclerView
-//                        val sourceAdapter = sourceRecyclerView.adapter as RecyclerViewDragAdapter<T, VH>
-//                        val sourcePosition = sourceRecyclerView.getChildAdapterPosition(sourceView)
-//                        view?.let { targetView ->
-//                            var targetRecyclerView: RecyclerView? = targetView as? RecyclerView
-//                            if (targetRecyclerView == null) {
-//                                targetRecyclerView = targetView.parent as? RecyclerView
-//                            }
-//                            if (targetRecyclerView !is RecyclerView) {
-//                                return false
-//                            }
-//                            val targetAdapter =
-//                                targetRecyclerView!!.adapter as RecyclerViewDragAdapter<T, VH>
-//                            val targetPosition = if (targetView is RecyclerView) {
-//                                targetAdapter.currentList.size
-//                            } else {
-//                                targetRecyclerView!!.getChildAdapterPosition(targetView)
-//                            }
-//                            if (sourceRecyclerView.id == targetRecyclerView!!.id) {
-//                                if (isSwappable) {
-//            //                                if (targetPosition >= 0 && sourceAdapter.currentList[targetPosition] != null) {
-//                                    if (targetPosition >= 0) {
-//                                        if (targetPosition >= 0) {
-//                                            sourceAdapter.onSwap(sourcePosition, targetPosition)
-//                                        } else {
-//                                            sourceAdapter.onSwap(
-//                                                sourcePosition,
-//                                                sourceAdapter.currentList.size - 1
-//                                            )
-//                                        }
-//                                    }
-//                                }
-//                            } else {
-//                                try {
-//                                    targetAdapter.currentList[targetPosition]?.let {
-//                                        if (sourceAdapter.currentList.size < targetPosition) {
-//                                            sourceAdapter.onSet(
-//                                                sourcePosition,
-//                                                targetAdapter.currentList[targetPosition]
-//                                            )
-//                                        } else {
-//                                            targetAdapter.onSet(
-//                                                targetPosition,
-//                                                sourceAdapter.currentList[sourcePosition]
-//                                            )
-//                                        }
-//                                    } ?: run {
-//                                        targetAdapter.onAdd(sourceAdapter.currentList[sourcePosition])
-//                                    }
-//                                } catch (e: IndexOutOfBoundsException) {
-//                                    sourceAdapter.onRemove(sourceAdapter.currentList[sourcePosition])
-//                                }
-//                            }
-//                        } ?: run {
-//                            return false
-//                        }
+                        val sourceView = it.localState as View
+                        val sourceRecyclerView = sourceView.parent as RecyclerView
+                        val sourceAdapter = sourceRecyclerView.adapter as RecyclerViewDragAdapter<T, VH>
+                        val sourcePosition = sourceRecyclerView.getChildAdapterPosition(sourceView)
+                        view?.let { targetView ->
+                            var targetRecyclerView: RecyclerView? = targetView as? RecyclerView
+                            if (targetRecyclerView == null) {
+                                targetRecyclerView = targetView.parent as? RecyclerView
+                            }
+                            if (targetRecyclerView !is RecyclerView) {
+                                return@OnDragListener false
+                            }
+                            val targetAdapter =
+                                targetRecyclerView!!.adapter as RecyclerViewDragAdapter<T, VH>
+                            val targetPosition = if (targetView is RecyclerView) {
+                                targetAdapter.currentList.size
+                            } else {
+                                targetRecyclerView!!.getChildAdapterPosition(targetView)
+                            }
+                            if (sourceRecyclerView.id == targetRecyclerView!!.id) {
+                                if (isSwappable) {
+            //                                if (targetPosition >= 0 && sourceAdapter.currentList[targetPosition] != null) {
+                                    if (targetPosition >= 0) {
+                                        if (targetPosition >= 0) {
+                                            sourceAdapter.onSwap(true,sourcePosition, targetPosition)
+                                        } else {
+                                            sourceAdapter.onSwap(
+                                                true,
+                                                sourcePosition,
+                                                sourceAdapter.currentList.size - 1
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                try {
+                                    targetAdapter.currentList[targetPosition]?.let {
+                                        if (sourceAdapter.currentList.size < targetPosition) {
+                                            sourceAdapter.onSet(
+                                                sourcePosition,
+                                                targetAdapter.currentList[targetPosition]
+                                            )
+                                        } else {
+                                            targetAdapter.onSet(
+                                                targetPosition,
+                                                sourceAdapter.currentList[sourcePosition]
+                                            )
+                                        }
+                                    } ?: run {
+                                        targetAdapter.onAdd(sourceAdapter.currentList[sourcePosition])
+                                    }
+                                } catch (e: IndexOutOfBoundsException) {
+                                    sourceAdapter.onRemove(sourceAdapter.currentList[sourcePosition])
+                                }
+                            }
+                        } ?: run {
+                            return@OnDragListener false
+                        }
                 }
                 DragEvent.ACTION_DRAG_ENDED -> {
                     Log.d("sss", "***** drag event ended *****")
+                    val sourceView = it.localState as View
+                    sourceView.alpha = 1f
+
                 }
                 else -> {
 
@@ -177,5 +180,5 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
 
     abstract fun onSet(index: Int, item: T)
 
-    abstract fun onSwap(from: Int, to: Int)
+    abstract fun onSwap(isDrop: Boolean, from: Int, to: Int)
 }

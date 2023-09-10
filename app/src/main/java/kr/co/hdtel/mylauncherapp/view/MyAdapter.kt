@@ -7,21 +7,23 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import kr.co.hdtel.mylauncherapp.data.DataInfo
 import kr.co.hdtel.mylauncherapp.databinding.ItemEtcBinding
 import kr.co.hdtel.mylauncherapp.databinding.ItemLargeBinding
 import kr.co.hdtel.mylauncherapp.databinding.ItemNullBinding
 import kr.co.hdtel.mylauncherapp.databinding.ItemSmallBinding
-import kr.co.hdtel.mylauncherapp.util.ItemTouchListener
 import kr.co.hdtel.mylauncherapp.util.MyShadowBuilder
 import kr.co.hdtel.mylauncherapp.util.RecyclerViewDragAdapter
 import java.util.*
 
-class MyAdapter(private val onAdapterListener: OnAdapterListener, override val isSwappable: Boolean) :
-    RecyclerViewDragAdapter<DataInfo, RecyclerView.ViewHolder>(diffUtil) {
+class MyAdapter(
+    private val onAdapterListener: OnAdapterListener,
+    override val isSwappable: Boolean) :
+    RecyclerViewDragAdapter<DataInfo, ViewHolder>(diffUtil) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return when (viewType) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val viewHolder = when (viewType) {
             NULL_TYPE -> {
                 NullViewHolder(
                     ItemNullBinding.inflate(
@@ -39,7 +41,9 @@ class MyAdapter(private val onAdapterListener: OnAdapterListener, override val i
                         parent,
                         false
                     ), dragListener
-                )
+                ).apply {
+                    builder = MyShadowBuilder(this.itemView)
+                }
             }
 
             LARGE_TYPE -> {
@@ -69,9 +73,15 @@ class MyAdapter(private val onAdapterListener: OnAdapterListener, override val i
                         parent,
                         false
                     ), dragListener
-                )
+                ).apply {
+                    builder = MyShadowBuilder(this.itemView)
+                }
+
+
             }
         }
+
+        return viewHolder
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -85,7 +95,7 @@ class MyAdapter(private val onAdapterListener: OnAdapterListener, override val i
         }
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         when (holder) {
             is NullViewHolder -> holder.bind()
             is SmallViewHolder -> holder.bind(getItem(position))
@@ -96,7 +106,7 @@ class MyAdapter(private val onAdapterListener: OnAdapterListener, override val i
 
     class NullViewHolder(
         private val binding: ItemNullBinding
-    ): RecyclerView.ViewHolder(binding.root) {
+    ): ViewHolder(binding.root) {
         fun bind() {
 
         }
@@ -105,20 +115,19 @@ class MyAdapter(private val onAdapterListener: OnAdapterListener, override val i
     class SmallViewHolder(
         private val binding: ItemSmallBinding,
         private val dragListener: View.OnDragListener
-    ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: DataInfo?) {
-            binding.nameTv.text = item?.name
+    ) : ViewHolder(binding.root) {
+        lateinit var builder : MyShadowBuilder
 
+        fun bind(item: DataInfo?) {
+            Log.d("sss","smallViewHolder")
+            binding.nameTv.text = item?.name
             binding.root.setOnLongClickListener { view ->
-                Log.d("sss","view:longclick")
-                view.animate()
                 val clipData = ClipData.newPlainText("","")
-//                view.background = null
-                val shadowBuilder = MyShadowBuilder(view)
-                view?.startDragAndDrop(clipData, shadowBuilder, view, 0)
-//                view.visibility = View.INVISIBLE
-                false
+                view?.startDragAndDrop(clipData,builder, view, 0)
+                view.alpha = 0f
+                true
             }
+
             binding.root.setOnDragListener(dragListener)
         }
     }
@@ -126,7 +135,7 @@ class MyAdapter(private val onAdapterListener: OnAdapterListener, override val i
     class LargeViewHolder(
         private val binding: ItemLargeBinding,
         private val dragListener: View.OnDragListener
-    ) : RecyclerView.ViewHolder(binding.root) {
+    ) : ViewHolder(binding.root) {
         fun bind(item: DataInfo?) {
             binding.nameTv.text = item?.name
 
@@ -144,7 +153,7 @@ class MyAdapter(private val onAdapterListener: OnAdapterListener, override val i
     class EtcViewHolder(
         private val binding: ItemEtcBinding,
         private val dragListener: View.OnDragListener
-    ) : RecyclerView.ViewHolder(binding.root) {
+    ) : ViewHolder(binding.root) {
         fun bind() {
             binding.root.setOnLongClickListener { view ->
                 val clipData = ClipData.newPlainText("", "")
@@ -155,6 +164,7 @@ class MyAdapter(private val onAdapterListener: OnAdapterListener, override val i
             binding.root.setOnDragListener(dragListener)
         }
     }
+
 
     interface OnAdapterListener {
         fun addOnViewModel(widgetItemInfo: DataInfo)
@@ -233,16 +243,19 @@ class MyAdapter(private val onAdapterListener: OnAdapterListener, override val i
         //
     }
 
-    override fun onSwap(from: Int, to: Int) {
-//        if (currentList[to] == null || currentList[from] == null) {
-//            return
-//        }
+    override fun onSwap(isDrop: Boolean, from: Int, to: Int) {
+        if (from > currentList.size-1 || to > currentList.size-1) {
+            return
+        }
 
-//        val newList = currentList.toMutableList()
-//        shiftItem(newList, from, to)
+        val newList = currentList.toMutableList()
+        shiftItem(newList,from, to)
 
+        if (isDrop) {
+            onAdapterListener.swapOnViewModel(currentList,from,to)
+        }
 
-        onAdapterListener.swapOnViewModel(currentList.toMutableList(),from,to)
+        submitList(newList)
     }
 
     override fun onRemove(item: DataInfo) {
