@@ -9,62 +9,36 @@ import java.util.*
 
 class MainViewModel : ViewModel() {
 
-    private val _items = MutableLiveData<List<DataInfo?>?>()
-    val items: LiveData<List<DataInfo?>?> = _items
+    private val _topItems = MutableLiveData<List<DataInfo?>?>()
+    val topItems: LiveData<List<DataInfo?>?> = _topItems
+
+    private val _bottomItems = MutableLiveData<List<DataInfo?>?>()
+    val bottomItems: LiveData<List<DataInfo?>?> = _bottomItems
 
     fun setInitData() {
         Log.d("sss", "===setInitData===")
-        val initData = mutableListOf<DataInfo>().apply {
-            add(DataInfo(DataInfo.ITEM_TYPE_SMALL, "A"))
-            add(DataInfo(DataInfo.ITEM_TYPE_SMALL, "B"))
-            add(DataInfo(DataInfo.ITEM_TYPE_SMALL, "C"))
-//            add(DataInfo(DataInfo.ITEM_TYPE_LARGE, "TEST"))
-//            add(DataInfo(DataInfo.ITEM_TYPE_ETC, "ETC"))
+        val initTopData = mutableListOf<DataInfo>().apply {
+            add(DataInfo(DataInfo.ITEM_TYPE_SMALL, "1", DataInfo.CONTAINER_TOP))
+            add(DataInfo(DataInfo.ITEM_TYPE_SMALL, "2", DataInfo.CONTAINER_TOP))
+            add(DataInfo(DataInfo.ITEM_TYPE_SMALL, "3", DataInfo.CONTAINER_TOP))
+            add(DataInfo(DataInfo.ITEM_TYPE_SMALL,"4",DataInfo.CONTAINER_TOP))
         }
 
-        _items.value = initData
+        val initData = mutableListOf<DataInfo>().apply {
+            add(DataInfo(DataInfo.ITEM_TYPE_SMALL, "A", DataInfo.CONTAINER_BOTTOM))
+            add(DataInfo(DataInfo.ITEM_TYPE_SMALL, "B", DataInfo.CONTAINER_BOTTOM))
+            add(DataInfo(DataInfo.ITEM_TYPE_SMALL, "C", DataInfo.CONTAINER_BOTTOM))
+        }
+
+        _topItems.value = initTopData
+        _bottomItems.value = initData
     }
 
-//    private fun setItemPosition(list: List<DataInfo?>): List<DataInfo?> {
-//        val resultList = arrayListOf<DataInfo?>()
-//        var cursorLine = 1
-//        var cursor = 0
-//        var totalWeightCount = 0
-//
-//        for (widgetInfo in list) {
-//            widgetInfo ?: continue
-//            val itemWeight = widgetInfo.type
-//            totalWeightCount += itemWeight
-//
-//            if (cursor > 2) {
-//                cursorLine++
-//                cursor = 0
-//            }
-//
-//            if (itemWeight > (3 - cursor)) {
-//                resultList.add(null)
-//                cursorLine++
-//                cursor = 0
-//            }
-//            resultList.add(widgetInfo)
-//            cursor += itemWeight
-//        }
-//
-//        val totalCursorCnt = (cursorLine - 1) * 3 + (cursor + 1) - 1
-//        if (totalCursorCnt < 6) {
-//            repeat(6 - totalCursorCnt) {
-//                resultList.add(null)
-//            }
-//        }
-//        return resultList
-//    }
+    fun onItemSwap(list: List<DataInfo?>) {
+//        shiftItem(list, from, to)
+        _topItems.value = list
 
-    fun onItemSwap(list: List<DataInfo?>, from: Int, to: Int) {
-        val data = list.toMutableList()
-        //뒤에있던 아이템을 앞으로 당기면 하나씩 뒤로 이동
-//        shiftItem(data, from, to)
-//        Collections.swap(data, from, to)
-        _items.value = data
+        Log.d("sss","swap ......list:${list}")
     }
 
 //    private fun shiftItem(list: List<DataInfo?>, from: Int, to: Int) {
@@ -79,16 +53,29 @@ class MainViewModel : ViewModel() {
 //        }
 //    }
 
-    //            add(DataInfo(DataInfo.ITEM_TYPE_LARGE, "D","10,000"))
-//            add(DataInfo(DataInfo.ITEM_TYPE_LARGE, "E","15,000"))
-//            add(DataInfo(DataInfo.ITEM_TYPE_LARGE, "F","43,000"))
-//            add(DataInfo(DataInfo.ITEM_TYPE_LARGE, "G","2,700"))
-//            add(DataInfo(DataInfo.ITEM_TYPE_ETC, "테스트테스트","-----"))
-//            add(DataInfo(DataInfo.ITEM_TYPE_SMALL, "AA","30,000"))
-//            add(DataInfo(DataInfo.ITEM_TYPE_SMALL, "BB","130,000"))
-//            add(DataInfo(DataInfo.ITEM_TYPE_SMALL, "CC","7,500"))
-//            add(DataInfo(DataInfo.ITEM_TYPE_LARGE, "DD","10,000"))
-//            add(DataInfo(DataInfo.ITEM_TYPE_LARGE, "EE","15,000"))
-//            add(DataInfo(DataInfo.ITEM_TYPE_LARGE, "FF","43,000"))
-//            add(DataInfo(DataInfo.ITEM_TYPE_LARGE, "GG","2,700"))
+    fun onItemSet(targetList: List<DataInfo>) {
+        Log.d("sss", "viewModel onItemSet targetList:${targetList}")
+        _topItems.value = targetList
+//        _topItems.value?.let { fav ->
+////            val favoriteItems = fav.toMutableList()
+//            val newList = mutableListOf<DataInfo?>().apply {
+//                addAll(fav.toMutableList())
+//            }
+//
+//            Log.d("sss","onItemSet item:${item}")
+//            val originItem = item.copy().apply {
+//                this.container = DataInfo.CONTAINER_TOP
+//            }
+//            newList.add(newList.size,originItem)
+//            _topItems.value = newList
+//
+//            _bottomItems.value?.let { all ->
+//                val allApps = mutableListOf<DataInfo?>().apply {
+//                    addAll(all)
+//                }
+//                allApps.remove(item)
+//                _bottomItems.value = allApps
+//            }
+//        }
+    }
 }

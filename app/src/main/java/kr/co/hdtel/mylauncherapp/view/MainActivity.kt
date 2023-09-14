@@ -8,11 +8,9 @@ import androidx.databinding.DataBindingUtil
 import kr.co.hdtel.mylauncherapp.R
 import kr.co.hdtel.mylauncherapp.data.DataInfo
 import kr.co.hdtel.mylauncherapp.databinding.ActivityMainBinding
-import kr.co.hdtel.mylauncherapp.util.MyShadowBuilder
 import kr.co.hdtel.mylauncherapp.util.SpanSize
 
 class MainActivity : AppCompatActivity(), MyAdapter.OnAdapterListener {
-
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
 
@@ -32,6 +30,7 @@ class MainActivity : AppCompatActivity(), MyAdapter.OnAdapterListener {
             lifecycleOwner = this@MainActivity
             viewModel = this@MainActivity.viewModel
             activity = this@MainActivity
+            favoriteSpanSize = SpanSize(binding.topRv)
             spanSize = SpanSize(binding.itemRv)
             onAdapterListener = this@MainActivity
         }
@@ -49,9 +48,13 @@ class MainActivity : AppCompatActivity(), MyAdapter.OnAdapterListener {
         //
     }
 
-    override fun swapOnViewModel(list: List<DataInfo?>, from: Int, to: Int) {
-        Log.d("sss","swapOnViewModel")
-        viewModel.onItemSwap(list, from, to)
+    override fun swapOnViewModel(list: List<DataInfo>) {
+        viewModel.onItemSwap(list)
+    }
+
+    override fun setOnViewModel(targetList: List<DataInfo>) {
+        Log.d("sss","setOnViewModel...")
+        viewModel.onItemSet(targetList)
     }
 
     override fun errorOnViewModel() {

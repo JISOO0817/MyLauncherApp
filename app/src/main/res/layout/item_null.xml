@@ -12,7 +12,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:background="#838285">
+        android:layout_margin="10dp"
+        android:background="#383739">
 
         <TextView
             android:id="@+id/name_tv"

@@ -1,21 +1,25 @@
 package kr.co.hdtel.mylauncherapp.util
 
 import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
 import android.graphics.Point
-import android.graphics.drawable.ColorDrawable
-import android.util.Log
 import android.view.View
-import kr.co.hdtel.mylauncherapp.R
 
-class MyShadowBuilder(view: View): View.DragShadowBuilder(view) {
-    private var shadow: View
+open class MyShadowBuilder(view: View): View.DragShadowBuilder(view) {
     private var width = 0
     private var height = 0
 
-    init {
-        shadow = view
+    fun width(size: Float): MyShadowBuilder {
+        this.width = (view.width * size).toInt()
+        return this@MyShadowBuilder
+    }
+
+    fun height(size: Float): MyShadowBuilder {
+        this.height = (view.height * size).toInt()
+        return this@MyShadowBuilder
+    }
+
+    fun build(): MyShadowBuilder {
+        return MyShadowBuilder(view)
     }
 
     override fun onProvideShadowMetrics(size: Point, touch: Point) {
@@ -28,21 +32,10 @@ class MyShadowBuilder(view: View): View.DragShadowBuilder(view) {
     }
 
     override fun onDrawShadow(canvas: Canvas?) {
-        val pnt = Paint()
-        pnt.alpha = 255
-        pnt.color = Color.GREEN
-//        view.alpha = 1f
-        canvas?.drawRect(0f,0f,(width).toFloat(), (height).toFloat(), pnt)
-
-//        val shadowPaint = Paint()
-//        shadow.alpha = 1f
-//        val originBac = view.background
-//        shadow.background = C/olorDrawable(Color.BLUE)
-//        canvas?.let {
-//            Log.d("sss", "canvas...")
-//            it.drawRect(0f, 0f, view.width.toFloat(), view.height.toFloat(), shadowPaint)
-//            view.draw(it)
-//        }
-//            view.background = originBac
+        super.onDrawShadow(canvas)
+//        val pnt = Paint()
+//        pnt.alpha = 255
+//        pnt.color = Color.GREEN
+//        canvas?.drawRect(0f,0f,(width).toFloat(), (height).toFloat(), pnt)
     }
 }

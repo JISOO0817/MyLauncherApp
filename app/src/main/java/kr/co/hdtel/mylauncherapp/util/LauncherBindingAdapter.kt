@@ -11,21 +11,21 @@ object LauncherBindingAdapter {
 
     @JvmStatic
     @BindingAdapter(
-        value = ["data", "spanCount", "onADapterListener", "spanSizeLookup"],
+        value = ["data", "spanCount", "onADapterListener", "spanSizeLookup","swappable"],
         requireAll = false
     )
     fun RecyclerView.bindRecyclerView(
         data: List<DataInfo?>?,
         spanCount: Int,
         onAdapterListener: MyAdapter.OnAdapterListener,
-        spanSizeLookup: SpanSize
+        spanSizeLookup: SpanSize,
+        swappable: Boolean
     ) {
-        Log.d("sss","bindingAdapter...")
         this.setHasFixedSize(true)
         val editLayoutManager = GridLayoutManager(this.context, spanCount)
         editLayoutManager.spanSizeLookup = spanSizeLookup
         this.layoutManager = editLayoutManager
-        val adapter = (this.adapter as? MyAdapter) ?: MyAdapter(onAdapterListener,true)
+        val adapter = (this.adapter as? MyAdapter) ?: MyAdapter(onAdapterListener,swappable)
             .also {
                 this.adapter = it
                 this.setOnDragListener(it.dragListener)

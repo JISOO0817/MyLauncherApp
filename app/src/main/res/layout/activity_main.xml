@@ -3,23 +3,27 @@
     <data>
        <variable
            name="viewModel"
-           type="kr.co.hdtel.mylauncherapp.view.MainViewModel" />
+           type="kr.co.hdtel.mylauncherapp.view.MainViewModel"/>
 
         <variable
-            name="spanSize"
+            name="favoriteSpanSize"
             type="kr.co.hdtel.mylauncherapp.util.SpanSize" />
 
         <variable
+            name="spanSize"
+            type="kr.co.hdtel.mylauncherapp.util.SpanSize"/>
+
+        <variable
             name="activity"
-            type="kr.co.hdtel.mylauncherapp.view.MainActivity" />
+            type="kr.co.hdtel.mylauncherapp.view.MainActivity"/>
 
         <variable
             name="onAdapterListener"
-            type="kr.co.hdtel.mylauncherapp.view.MyAdapter.OnAdapterListener" />
+            type="kr.co.hdtel.mylauncherapp.view.MyAdapter.OnAdapterListener"/>
 
         <variable
             name="shadowBuilder"
-            type="kr.co.hdtel.mylauncherapp.util.MyShadowBuilder" />
+            type="kr.co.hdtel.mylauncherapp.util.MyShadowBuilder"/>
 
     </data>
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -29,21 +33,63 @@
         android:layout_height="match_parent"
         tools:context=".view.MainActivity">
 
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/hor_0.5_guideline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.5"/>
+
+        <TextView
+            android:id="@+id/top_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:gravity="center"
+            android:text="TOP"
+            android:textSize="25dp"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/top_rv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/top_view"
+            app:data="@{viewModel.topItems}"
+            app:swappable="@{true}"
+            app:spanCount="@{3}"
+            app:spanSizeLookup="@{favoriteSpanSize}"
+            app:onADapterListener="@{onAdapterListener}"
+            tools:listitem="@layout/item_large"/>
+
+        <TextView
+            android:id="@+id/bottom_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:text="BOTTOM"
+            android:textSize="25dp"
+            android:layout_marginTop="50dp"
+            app:layout_constraintTop_toBottomOf="@+id/hor_0.5_guideline"/>
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/item_rv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:data="@{viewModel.items}"
+            app:layout_constraintTop_toBottomOf="@+id/bottom_view"
+            app:data="@{viewModel.bottomItems}"
+            app:swappable="@{false}"
             app:spanCount="@{3}"
             app:spanSizeLookup="@{spanSize}"
             app:onADapterListener="@{onAdapterListener}"
-            android:nestedScrollingEnabled="false"
-            android:overScrollMode="never"
-            tools:listitem="@layout/item_large"
-            android:layout_marginBottom="10dp"/>
+            tools:listitem="@layout/item_large"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
