@@ -12,10 +12,10 @@ import kr.co.hdtel.mylauncherapp.databinding.ItemEtcBinding
 import kr.co.hdtel.mylauncherapp.databinding.ItemLargeBinding
 import kr.co.hdtel.mylauncherapp.databinding.ItemNullBinding
 import kr.co.hdtel.mylauncherapp.databinding.ItemSmallBinding
-import kr.co.hdtel.mylauncherapp.util.ExchangeType
+import kr.co.hdtel.mylauncherapp.util.DragType
 import kr.co.hdtel.mylauncherapp.util.MyShadowBuilder
 import kr.co.hdtel.mylauncherapp.util.RecyclerViewDragAdapter
-import java.util.*
+import kr.co.hdtel.mylauncherapp.util.ViewType
 
 class MyAdapter(
     private val onAdapterListener: OnAdapterListener,
@@ -169,7 +169,7 @@ class MyAdapter(
         fun addOnViewModel(widgetItemInfo: DataInfo)
         fun removeOnViewModel(widgetItemInfo: DataInfo)
         fun swapOnViewModel(list: List<DataInfo>)
-        fun setOnViewModel(targetList: List<DataInfo>)
+        fun setOnViewModel(targetList: List<DataInfo>, originItem: DataInfo, from: Int, to: Int)
         fun errorOnViewModel()
     }
 
@@ -235,13 +235,17 @@ class MyAdapter(
 
     override fun onSetTest(isDrop: Boolean, targetList: List<DataInfo>, originItem: DataInfo, from: Int, to: Int) {
         if (isDrop) {
-            Log.d("sss","onSetTest drop...")
-            onAdapterListener.setOnViewModel(targetList)
+            Log.d("sss","onSetTest drop... list:${targetList}")
+            onAdapterListener.setOnViewModel(targetList, originItem, from, to)
         }
     }
 
-    override fun exchangeType(): ExchangeType {
-        return ExchangeType.ONEBYONE
+    override fun dragType(): DragType {
+        return DragType.ONEBYONE
+    }
+
+    override fun originViewType(): ViewType {
+        return ViewType.TRANSPARENT
     }
 
     override fun onSwap(isDrop: Boolean, list: List<DataInfo>) {
@@ -272,10 +276,6 @@ class MyAdapter(
 
     override fun onRemove(item: DataInfo) {
 
-    }
-
-    override fun hideShadowMode(): Boolean {
-        return true
     }
 
     override fun onAdd(item: DataInfo) {

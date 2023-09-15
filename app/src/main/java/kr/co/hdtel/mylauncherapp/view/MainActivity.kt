@@ -52,9 +52,14 @@ class MainActivity : AppCompatActivity(), MyAdapter.OnAdapterListener {
         viewModel.onItemSwap(list)
     }
 
-    override fun setOnViewModel(targetList: List<DataInfo>) {
+    override fun setOnViewModel(
+        targetList: List<DataInfo>,
+        originItem: DataInfo,
+        from: Int,
+        to: Int
+    ) {
         Log.d("sss","setOnViewModel...")
-        viewModel.onItemSet(targetList)
+        viewModel.onItemSet(targetList, originItem, from, to)
     }
 
     override fun errorOnViewModel() {

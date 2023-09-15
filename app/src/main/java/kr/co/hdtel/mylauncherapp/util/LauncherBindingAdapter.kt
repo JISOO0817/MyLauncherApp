@@ -37,8 +37,6 @@ object LauncherBindingAdapter {
 //
 //                helper.attachToRecyclerView(this@bindRecyclerView)
             }
-
-        Log.d("sss","data:${data}")
         data?.let {
             adapter.submitList(it)
         }
