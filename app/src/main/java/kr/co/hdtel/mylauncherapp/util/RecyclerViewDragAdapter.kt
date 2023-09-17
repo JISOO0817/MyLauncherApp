@@ -80,7 +80,6 @@ abstract class RecyclerViewDragAdapter<T : Any, VH : RecyclerView.ViewHolder>(
                                         targetPosition
                                     )
 
-
                                 onSetTest(
                                         false,
                                         setList.first,
@@ -89,7 +88,7 @@ abstract class RecyclerViewDragAdapter<T : Any, VH : RecyclerView.ViewHolder>(
                                         targetPosition
                                     )
 
-                                itemViews[targetPosition]?.itemView?.alpha = MIN
+//                                itemViews[targetPosition]?.itemView?.alpha = MIN
                                 originAdapter.submitList(setList.second)
                             } ?: run {
                                 targetAdapter.onAdd(originAdapter.currentList[originPosition])
@@ -189,7 +188,6 @@ abstract class RecyclerViewDragAdapter<T : Any, VH : RecyclerView.ViewHolder>(
         from: Int,
         to: Int
     ): Pair<MutableList<T>, MutableList<T>> {
-
         val tempList = targetList.toMutableList()
         val bottomList = originList.toMutableList()
         if (!targetList.contains(originItem)) {

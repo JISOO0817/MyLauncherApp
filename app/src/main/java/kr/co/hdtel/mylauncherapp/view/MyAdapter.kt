@@ -131,7 +131,6 @@ class MyAdapter(
                 view?.startDragAndDrop(clipData, builder, view, 0)
                 true
             }
-
             binding.root.setOnDragListener(dragListener)
         }
     }
