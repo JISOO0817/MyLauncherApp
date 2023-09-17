@@ -21,6 +21,7 @@ class MyAdapter(
     private val onAdapterListener: OnAdapterListener,
     override val isSwappable: Boolean
 ) : RecyclerViewDragAdapter<DataInfo, ViewHolder>(diffUtil) {
+    override val itemViews = hashMapOf<Int, ViewHolder>()
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val viewHolder = when (viewType) {
             NULL_TYPE -> {
@@ -94,7 +95,10 @@ class MyAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         when (holder) {
             is NullViewHolder -> holder.bind()
-            is SmallViewHolder -> holder.bind(getItem(position))
+            is SmallViewHolder -> {
+                holder.bind(getItem(position))
+                itemViews[position] = holder
+            }
             is LargeViewHolder -> holder.bind(getItem(position))
             is EtcViewHolder -> holder.bind()
         }
@@ -241,7 +245,7 @@ class MyAdapter(
     }
 
     override fun dragType(): DragType {
-        return DragType.ONEBYONE
+        return DragType.SHIFT
     }
 
     override fun originViewType(): ViewType {

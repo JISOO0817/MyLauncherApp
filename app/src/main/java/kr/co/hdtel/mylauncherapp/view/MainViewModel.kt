@@ -24,8 +24,8 @@ class MainViewModel : ViewModel() {
 
         val initData = mutableListOf<DataInfo>().apply {
             add(DataInfo(DataInfo.ITEM_TYPE_SMALL, "A", DataInfo.CONTAINER_BOTTOM))
-//            add(DataInfo(DataInfo.ITEM_TYPE_SMALL, "B", DataInfo.CONTAINER_BOTTOM))
-//            add(DataInfo(DataInfo.ITEM_TYPE_SMALL, "C", DataInfo.CONTAINER_BOTTOM))
+            add(DataInfo(DataInfo.ITEM_TYPE_SMALL, "B", DataInfo.CONTAINER_BOTTOM))
+            add(DataInfo(DataInfo.ITEM_TYPE_SMALL, "C", DataInfo.CONTAINER_BOTTOM))
         }
 
         _topItems.value = initTopData
