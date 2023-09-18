@@ -54,12 +54,13 @@ class MainActivity : AppCompatActivity(), MyAdapter.OnAdapterListener {
 
     override fun setOnViewModel(
         targetList: List<DataInfo>,
+        originList: List<DataInfo>,
         originItem: DataInfo,
         from: Int,
         to: Int
     ) {
         Log.d("sss","setOnViewModel...")
-        viewModel.onItemSet(targetList, originItem, from, to)
+        viewModel.onItemSet(targetList, originList, originItem, from, to)
     }
 
     override fun errorOnViewModel() {

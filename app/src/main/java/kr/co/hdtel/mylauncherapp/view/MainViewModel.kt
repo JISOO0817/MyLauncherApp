@@ -38,19 +38,21 @@ class MainViewModel : ViewModel() {
         Log.d("sss","swap ......list:${list}")
     }
 
-    fun onItemSet(targetList: List<DataInfo>, originItem: DataInfo, from: Int, to: Int) {
+    fun onItemSet(targetList: List<DataInfo>, originList: List<DataInfo>, originItem: DataInfo, from: Int, to: Int) {
         Log.d("sss", "viewModel onItemSet targetList:${targetList}")
         val topList = targetList.apply {
             this[to].container = DataInfo.CONTAINER_TOP
         }
 //
+        Log.d("sss", "viewModel onItemSet topList:${topList}")
         _topItems.value = topList
 //
-        val bottomItems = _bottomItems.value?.toMutableList()
-        bottomItems?.let {
-            it.removeAt(from)
-        }
+
+//        val bottomItems = _bottomItems.value?.toMutableList()
+//        bottomItems?.let {
+//            it.removeAt(from)
+//        }
 //
-        _bottomItems.value = bottomItems
+        _bottomItems.value = originList
     }
 }

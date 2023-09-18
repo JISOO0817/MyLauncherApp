@@ -172,7 +172,7 @@ class MyAdapter(
         fun addOnViewModel(widgetItemInfo: DataInfo)
         fun removeOnViewModel(widgetItemInfo: DataInfo)
         fun swapOnViewModel(list: List<DataInfo>)
-        fun setOnViewModel(targetList: List<DataInfo>, originItem: DataInfo, from: Int, to: Int)
+        fun setOnViewModel(targetList: List<DataInfo>, originList: List<DataInfo>, originItem: DataInfo, from: Int, to: Int)
         fun errorOnViewModel()
     }
 
@@ -236,16 +236,19 @@ class MyAdapter(
 //        submitList(newList)
     }
 
-    override fun onSetTest(isDrop: Boolean, targetList: List<DataInfo>, originItem: DataInfo, from: Int, to: Int) {
+    override fun onSetTest(isDrop: Boolean, targetList: List<DataInfo>, originList: List<DataInfo>, originItem: DataInfo, from: Int, to: Int) {
+        Log.d("sss","error drop...")
         if (isDrop) {
-            Log.d("sss","onSetTest drop... list:${targetList}")
-            onAdapterListener.setOnViewModel(targetList, originItem, from, to)
+            Log.d("sss","isDrop: targetList:${targetList}, originItem:${originItem}")
+            val originTemp = originList.toMutableList()
+            originTemp.remove(originItem)
+            onAdapterListener.setOnViewModel(targetList, originTemp, originItem, from, to)
         }
     }
 
     override fun dragType(): DragType {
-        return DragType.SHIFT
-    }
+        return DragType.ONEBYONE
+    } 
 
     override fun originViewType(): ViewType {
         return ViewType.TRANSPARENT
