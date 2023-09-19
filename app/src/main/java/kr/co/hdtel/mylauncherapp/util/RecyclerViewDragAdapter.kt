@@ -13,18 +13,32 @@ import android.util.Log
 import android.view.DragEvent
 import android.view.View
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import java.util.*
+import kotlin.properties.Delegates
 
 abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
     diffUtil: DiffUtil.ItemCallback<T>,
 ) : ListAdapter<T, VH>(diffUtil) {
     abstract val isSwappable: Boolean
     private var previousList = mutableListOf<T>()
+    private var viewHolder: RecyclerView.ViewHolder? = null
+    /**
+     * 0 -> 초기상태
+     * 1 -> 타겟 리사이클러뷰에 들어옴
+     * 2 -> 드롭완료
+     * 3 -> 성공적으로 드롭되지 않았으므로 추가한 아이템 제거
+     * */
+    private var returnState = 0
+    private var isOut = false
 
     val dragListener = View.OnDragListener { view, event ->
         event?.let {
+            val locationX = it.x
+            val locationY = it.y
+
             val originView = it.localState as View
             val originRecyclerView = originView.parent as RecyclerView?
             originRecyclerView?.let { originRV ->
@@ -32,14 +46,14 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
                 val originPosition = originRV.getChildAdapterPosition(originView)
 
                 var targetRecyclerView = view as? RecyclerView
-                targetRecyclerView = targetRecyclerView.takeIf { false } ?: view.parent as? RecyclerView
+                targetRecyclerView =
+                    targetRecyclerView.takeIf { false } ?: view.parent as? RecyclerView
 
-                val sameRecyclerView = targetRecyclerView?.let { targetRV ->
-                    originRV.id == targetRV.id
-                } ?: run {
-                    false
+                if (targetRecyclerView !is RecyclerView) {
+                    return@OnDragListener false
                 }
 
+                val sameRecyclerView = originRV.id == targetRecyclerView.id
                 val targetAdapter = targetRecyclerView.adapter as RecyclerViewDragAdapter<T, VH>
                 val targetPosition = if (view is RecyclerView) {
                     targetAdapter.currentList.size
@@ -47,15 +61,24 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
                     targetRecyclerView.getChildAdapterPosition(view)
                 }
 
-                if (targetRecyclerView !is RecyclerView) {
-                    return@OnDragListener false
-                }
-
                 val targetItem = targetAdapter.currentList[targetPosition]
 
                 when (it.action) {
                     DragEvent.ACTION_DRAG_STARTED -> {
-                        setDefaultViewColor(originView)
+                        setDefaultViewColor(originView, MIN)
+                    }
+
+                    DragEvent.ACTION_DRAG_LOCATION -> {
+                        Log.d("sss","ACTION_DRAG_LOCATION")
+                        val location = IntArray(2)
+                        view.getLocationOnScreen(location)
+
+                        val globalX = location[0] + event.x
+                        val globalY = location[1] + event.y
+
+                        Log.d("sss","target width:${originRecyclerView.width}, target height:${originRecyclerView.height}" +
+                                "lobalX:${globalX}, globalY:${globalY}")
+
                     }
 
                     DragEvent.ACTION_DRAG_ENTERED -> {
@@ -75,6 +98,14 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
                                     originPosition,
                                     targetPosition
                                 )
+
+                                viewHolder = targetRecyclerView.findViewHolderForAdapterPosition(targetPosition)
+                                if (viewHolder?.itemView?.tag == originAdapter.currentList[originPosition]) {
+                                    viewHolder?.itemView?.visibility = View.INVISIBLE
+                                }
+
+                                returnState = 1
+
                             } ?: run {
                                 targetAdapter.onAdd(originAdapter.currentList[originPosition])
                             }
@@ -82,6 +113,8 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
                     }
 
                     DragEvent.ACTION_DROP -> {
+                        Log.d("sss","ACTION_DROP action:${event.result}")
+                        Log.d("sss","ACTION_DROP")
                         if (!isSwappable) {
                             return@OnDragListener false
                         }
@@ -103,22 +136,34 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
                                     targetPosition
                                 )
 
+                                val tempList = originAdapter.currentList.toMutableList()
+                                tempList.removeAt(originPosition)
+                                originAdapter.submitList(tempList)
+
                                 onSet(
                                     setList.first,
-                                    setList.second,
+                                    tempList,
                                     originAdapter.currentList[originPosition],
                                     originPosition,
                                     targetPosition
                                 )
 
+                                viewHolder = targetRecyclerView.findViewHolderForAdapterPosition(targetPosition)
+                                if (viewHolder?.itemView?.tag == originAdapter.currentList[originPosition]) {
+                                    viewHolder?.itemView?.visibility = View.VISIBLE
+                                }
+
                             } ?: run {
                                 targetAdapter.onAdd(originAdapter.currentList[originPosition])
                             }
                         }
+
+                        return@OnDragListener true
                     }
 
                     DragEvent.ACTION_DRAG_ENDED -> {
-                        setDefaultViewColor(originView)
+                        setDefaultViewColor(originView, MAX)
+                        return@OnDragListener true
                     }
 
                     /**
@@ -128,7 +173,19 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
                      * */
                     DragEvent.ACTION_DRAG_EXITED -> {
                         Log.d("sss", "ACTION_DRAG_EXITED")
-                        checkTheItemOutArea()
+
+                        /**
+                         * 그냥 returnState만 따지면 안 되고,
+                         * 리사이클러뷰 영역이 아닌지도 따져야함.
+                         * */
+                        Log.d("ddd","isOut${isOut}")
+                        if (returnState == 1 && isOut) {
+                            Log.d("ddd","returnSTate1... 유효하지 않은 드롭")
+                            val tempList = targetAdapter.currentList.toMutableList()
+                            tempList.remove(originAdapter.currentList[originPosition])
+                            targetAdapter.submitList(tempList)
+                        }
+
                         return@OnDragListener false
                     }
 
@@ -138,6 +195,16 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
 
         }
         true
+    }
+
+    private fun isWithinRecyclerViewBounds(recyclerView: RecyclerView, x: Float, y: Float): Boolean {
+        val location = IntArray(2)
+        recyclerView.getLocationOnScreen(location)
+        val left = location[0]
+        val top = location[1]
+        val right = left + recyclerView.width
+        val bottom = top + recyclerView.height
+        return x >= left && x <= right && y >= top && y <= bottom
     }
 
     /**
@@ -216,20 +283,20 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
     }
 
     override fun onCurrentListChanged(previousList: MutableList<T>, currentList: MutableList<T>) {
-        Log.d("sss","previousList:${previousList}, currentList:${currentList}")
+        Log.d("sss", "previousList:${previousList}, currentList:${currentList}")
         this.previousList = if (previousList.isEmpty()) mutableListOf() else previousList
     }
 
-    /**
-     * check the item out the parent (recyclerview area
-     *
-     * */
-    private fun checkTheItemOutArea() {
-        if (dragType() == DragType.ONEBYONE) {
-            return
-        }
+//        Log.d("sss","x:${x},y:${y}")
+//        val recyclerViewLocation = IntArray(2)
+//        recyclerView.getLocationOnScreen(recyclerViewLocation)
+//        val xInRecyclerView = x - recyclerViewLocation[0]
+//        val yInRecyclerView = y - recyclerViewLocation[1]
+//
+//        Log.d("sss","xInRecyclerView:${xInRecyclerView}, yInRecyclerView:${yInRecyclerView}")
 
-    }
+    // 변환한 좌표를 기반으로 아이템이 리사이클러뷰 밖에 있는지 확인
+//        return xInRecyclerView > recyclerView.width || yInRecyclerView > recyclerView.height
 
     /**
      * swap  (same recyclerview)
@@ -268,10 +335,10 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
         }
     }
 
-    private fun setDefaultViewColor(view: View) {
+    private fun setDefaultViewColor(view: View, alpha: Float) {
         view.alpha = when (dragType()) {
             DragType.SHIFT -> {
-                MIN
+                alpha
             }
 
             DragType.ONEBYONE -> {
@@ -297,13 +364,4 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
         const val MAX = 1f
         const val MIN = 0f
     }
-
-    //    private fun test(
-//        callback: ((dragEvent: Int) -> Unit)? = null
-//    ) {
-//        callback?.invoke(DragEvent.ACTION_DRAG_STARTED)?: run {
-//
-//        }
-//    }
-
 }

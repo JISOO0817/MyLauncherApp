@@ -1,6 +1,7 @@
 package kr.co.hdtel.mylauncherapp.view
 
 import android.content.ClipData
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -98,10 +99,15 @@ class MyAdapter(
             is NullViewHolder -> holder.bind()
             is SmallViewHolder -> {
                 holder.bind(getItem(position))
+//                itemViews[position] = holder
             }
             is LargeViewHolder -> holder.bind(getItem(position))
             is EtcViewHolder -> holder.bind()
         }
+
+        val item = getItem(position)
+        holder.itemView.tag = item
+        Log.d("ddd","tag:${holder.itemView.tag}")
     }
 
     class NullViewHolder(
@@ -188,11 +194,7 @@ class MyAdapter(
         from: Int,
         to: Int
     ) {
-        val originTemp = originList.toMutableList().apply {
-            remove(originItem)
-        }
-
-        onAdapterListener.setOnViewModel(targetList, originTemp, originItem, from, to)
+        onAdapterListener.setOnViewModel(targetList, originList, originItem, from, to)
     }
 
     override fun dragType(): DragType {
