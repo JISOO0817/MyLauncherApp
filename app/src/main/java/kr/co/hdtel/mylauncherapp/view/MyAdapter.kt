@@ -1,8 +1,6 @@
 package kr.co.hdtel.mylauncherapp.view
 
 import android.content.ClipData
-import android.text.TextUtils
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,12 +14,12 @@ import kr.co.hdtel.mylauncherapp.databinding.ItemSmallBinding
 import kr.co.hdtel.mylauncherapp.util.DragType
 import kr.co.hdtel.mylauncherapp.util.MyShadowBuilder
 import kr.co.hdtel.mylauncherapp.util.RecyclerViewDragAdapter
-import kr.co.hdtel.mylauncherapp.util.ViewType
 
 class MyAdapter(
     private val onAdapterListener: OnAdapterListener,
     override val isSwappable: Boolean
 ) : RecyclerViewDragAdapter<DataInfo, ViewHolder>(diffUtil) {
+//    override var itemViews = 0
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val viewHolder = when (viewType) {
@@ -106,6 +104,21 @@ class MyAdapter(
         }
     }
 
+    class NullViewHolder(
+        private val binding: ItemNullBinding,
+        private val dragListener: View.OnDragListener
+    ) : ViewHolder(binding.root) {
+        lateinit var nullBuilder: MyShadowBuilder
+        fun bind() {
+            binding.root.setOnLongClickListener { view ->
+                val clipData = ClipData.newPlainText("", "")
+                view?.startDragAndDrop(clipData, nullBuilder, view, 0)
+                true
+            }
+            binding.root.setOnDragListener(dragListener)
+        }
+    }
+
     class SmallViewHolder(
         private val binding: ItemSmallBinding,
         private val dragListener: View.OnDragListener
@@ -153,22 +166,6 @@ class MyAdapter(
         }
     }
 
-    class NullViewHolder(
-        private val binding: ItemNullBinding,
-        private val dragListener: View.OnDragListener
-    ) : ViewHolder(binding.root) {
-        lateinit var nullBuilder: MyShadowBuilder
-        fun bind() {
-
-            binding.root.setOnLongClickListener { view ->
-                val clipData = ClipData.newPlainText("", "")
-                view?.startDragAndDrop(clipData, nullBuilder, view, 0)
-                true
-            }
-            binding.root.setOnDragListener(dragListener)
-        }
-    }
-
     interface OnAdapterListener {
         fun addOnViewModel(widgetItemInfo: DataInfo)
         fun removeOnViewModel(widgetItemInfo: DataInfo)
@@ -199,12 +196,8 @@ class MyAdapter(
     }
 
     override fun dragType(): DragType {
-        return DragType.ONEBYONE
+        return DragType.SHIFT
     }
-
-//    override fun originViewType(): ViewType {
-//        return ViewType.TRANSPARENT
-//    }
 
     override fun onSwap(list: List<DataInfo>) {
         onAdapterListener.swapOnViewModel(list)
@@ -236,5 +229,4 @@ class MyAdapter(
             ) = oldItem.name == newItem.name
         }
     }
-
 }
