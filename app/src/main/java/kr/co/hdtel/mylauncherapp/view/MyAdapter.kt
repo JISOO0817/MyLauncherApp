@@ -1,6 +1,7 @@
 package kr.co.hdtel.mylauncherapp.view
 
 import android.content.ClipData
+import android.text.TextUtils
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -21,7 +22,7 @@ class MyAdapter(
     private val onAdapterListener: OnAdapterListener,
     override val isSwappable: Boolean
 ) : RecyclerViewDragAdapter<DataInfo, ViewHolder>(diffUtil) {
-    override val itemViews = hashMapOf<Int, ViewHolder>()
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val viewHolder = when (viewType) {
             NULL_TYPE -> {
@@ -55,7 +56,9 @@ class MyAdapter(
                         parent,
                         false
                     ), dragListener
-                )
+                ).apply {
+                    largeBuilder = MyShadowBuilder(this.itemView)
+                }
             }
 
             ETC_TYPE -> {
@@ -97,25 +100,9 @@ class MyAdapter(
             is NullViewHolder -> holder.bind()
             is SmallViewHolder -> {
                 holder.bind(getItem(position))
-                itemViews[position] = holder
             }
             is LargeViewHolder -> holder.bind(getItem(position))
             is EtcViewHolder -> holder.bind()
-        }
-    }
-
-    class NullViewHolder(
-        private val binding: ItemNullBinding,
-        private val dragListener: View.OnDragListener
-    ) : ViewHolder(binding.root) {
-        lateinit var nullBuilder: MyShadowBuilder
-        fun bind() {
-            binding.root.setOnLongClickListener { view ->
-                val clipData = ClipData.newPlainText("", "")
-                view?.startDragAndDrop(clipData, nullBuilder, view, 0)
-                true
-            }
-            binding.root.setOnDragListener(dragListener)
         }
     }
 
@@ -139,15 +126,14 @@ class MyAdapter(
         private val binding: ItemLargeBinding,
         private val dragListener: View.OnDragListener
     ) : ViewHolder(binding.root) {
+        lateinit var largeBuilder: MyShadowBuilder
         fun bind(item: DataInfo?) {
             binding.nameTv.text = item?.name
             binding.root.setOnLongClickListener { view ->
                 val clipData = ClipData.newPlainText("", "")
-                val shadowBuilder = View.DragShadowBuilder()
-                view?.startDragAndDrop(clipData, shadowBuilder, view, 0)
-                false
+                view?.startDragAndDrop(clipData, largeBuilder, view, 0)
+                true
             }
-
             binding.root.setOnDragListener(dragListener)
         }
     }
@@ -167,27 +153,70 @@ class MyAdapter(
         }
     }
 
+    class NullViewHolder(
+        private val binding: ItemNullBinding,
+        private val dragListener: View.OnDragListener
+    ) : ViewHolder(binding.root) {
+        lateinit var nullBuilder: MyShadowBuilder
+        fun bind() {
+
+            binding.root.setOnLongClickListener { view ->
+                val clipData = ClipData.newPlainText("", "")
+                view?.startDragAndDrop(clipData, nullBuilder, view, 0)
+                true
+            }
+            binding.root.setOnDragListener(dragListener)
+        }
+    }
 
     interface OnAdapterListener {
         fun addOnViewModel(widgetItemInfo: DataInfo)
         fun removeOnViewModel(widgetItemInfo: DataInfo)
         fun swapOnViewModel(list: List<DataInfo>)
-        fun setOnViewModel(targetList: List<DataInfo>, originList: List<DataInfo>, originItem: DataInfo, from: Int, to: Int)
+        fun setOnViewModel(
+            targetList: List<DataInfo>,
+            originList: List<DataInfo>,
+            originItem: DataInfo,
+            from: Int,
+            to: Int
+        )
+
         fun errorOnViewModel()
     }
 
-//    override fun onRemove(item: DataInfo) {
-    //
+    override fun onSet(
+        targetList: List<DataInfo>,
+        originList: List<DataInfo>,
+        originItem: DataInfo,
+        from: Int,
+        to: Int
+    ) {
+        val originTemp = originList.toMutableList().apply {
+            remove(originItem)
+        }
+
+        onAdapterListener.setOnViewModel(targetList, originTemp, originItem, from, to)
+    }
+
+    override fun dragType(): DragType {
+        return DragType.ONEBYONE
+    }
+
+//    override fun originViewType(): ViewType {
+//        return ViewType.TRANSPARENT
 //    }
 
-//    override fun onSwap(list: List<DataInfo?>, from: Int, to: Int) {
-//        Log.d("sss","onSwap")
-//        onAdapterListener.swapOnViewModel(list, from, to)
-//    }
-//
-//    override fun onError() {
-//       //
-//    }
+    override fun onSwap(list: List<DataInfo>) {
+        onAdapterListener.swapOnViewModel(list)
+    }
+
+    override fun onRemove(item: DataInfo) {
+
+    }
+
+    override fun onAdd(item: DataInfo) {
+
+    }
 
     companion object {
         const val NULL_TYPE = 0
@@ -208,83 +237,4 @@ class MyAdapter(
         }
     }
 
-    override fun onSwap(isDrop: Boolean, from: Int, to: Int) {
-//        if (from > currentList.size - 1 || to > currentList.size - 1) {
-//            return
-//        }
-//
-//        val newList = currentList.toMutableList()
-//        shiftItem(newList, from, to)
-//
-//        if (isDrop) {
-//            onAdapterListener.swapOnViewModel(newList, from, to)
-//        }
-//
-//        submitList(newList)
-    }
-
-    override fun onSet(isDrop: Boolean, from: Int, to: Int, item: DataInfo) {
-//        Log.d("sss", "onSet call()")
-//        val newList = currentList.toMutableList()
-//        shiftItem(newList, from, to)
-//        newList.add(newLis/t.size-1,item)
-
-//        if (isDrop) {
-//            onAdapterListener.setOnViewModel(from,to, item)
-//        }
-
-//        submitList(newList)
-    }
-
-    override fun onSetTest(isDrop: Boolean, targetList: List<DataInfo>, originList: List<DataInfo>, originItem: DataInfo, from: Int, to: Int) {
-        Log.d("sss","error drop...")
-        if (isDrop) {
-            Log.d("sss","isDrop: targetList:${targetList}, originItem:${originItem}")
-            val originTemp = originList.toMutableList()
-            originTemp.remove(originItem)
-            onAdapterListener.setOnViewModel(targetList, originTemp, originItem, from, to)
-        }
-    }
-
-    override fun dragType(): DragType {
-        return DragType.ONEBYONE
-    } 
-
-    override fun originViewType(): ViewType {
-        return ViewType.TRANSPARENT
-    }
-
-    override fun onSwap(isDrop: Boolean, list: List<DataInfo>) {
-        if (isDrop) {
-            onAdapterListener.swapOnViewModel(list)
-        }
-    }
-
-//    private fun shiftItem(list: List<DataInfo>, from: Int, to: Int) {
-//        return if (from < to) {
-//            for (i in from until to) {
-//                Collections.swap(list, i, i + 1)
-//            }
-//        } else {
-//            for (i in from downTo to + 1) {
-//                Collections.swap(list, i, i - 1)
-//            }
-//        }
-//    }
-
-    private fun moveItem(index: Int, item: DataInfo) {
-//        var tempList = mutableListOf<DataInfo>()
-//        tempList.addAll(currentList)
-//        tempList.add(index,item)
-//        tempList
-        Log.d("sss","moveItem index:${index},item:${item}")
-    }
-
-    override fun onRemove(item: DataInfo) {
-
-    }
-
-    override fun onAdd(item: DataInfo) {
-
-    }
 }

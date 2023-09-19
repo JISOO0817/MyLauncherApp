@@ -15,14 +15,13 @@ import android.view.View
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import java.util.*
 
 abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
     diffUtil: DiffUtil.ItemCallback<T>,
 ) : ListAdapter<T, VH>(diffUtil) {
     abstract val isSwappable: Boolean
-    abstract val itemViews: HashMap<Int, ViewHolder>
+    private var previousList = mutableListOf<T>()
 
     val dragListener = View.OnDragListener { view, event ->
         event?.let {
@@ -33,8 +32,7 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
                 val originPosition = rv.getChildAdapterPosition(originView)
 
                 var targetRecyclerView = view as? RecyclerView
-                targetRecyclerView =
-                    targetRecyclerView.takeIf { false } ?: view.parent as? RecyclerView
+                targetRecyclerView = targetRecyclerView.takeIf { false } ?: view.parent as? RecyclerView
 
                 val sameRecyclerView = rv.id == targetRecyclerView?.id
 
@@ -57,38 +55,24 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
                     DragEvent.ACTION_DRAG_ENTERED -> {
                         Log.d("sss", "ACTION_DRAG_ENTERED")
                         if (sameRecyclerView) {
-                            if (!isSwappable) {
+                            if (!isSwappable || targetPosition < 0) {
                                 return@OnDragListener false
                             }
 
-                            val swpList = onSwapItem(originPosition, targetPosition)
-                            if (targetPosition >= 0) {
-                                onSwap(false, swpList)
-                            } else {
-                                return@OnDragListener false
-                            }
+                            onSwapAnimation(originPosition, targetPosition)
+
                         } else {
                             if (!isSwappable) {
                                 return@OnDragListener false
                             }
 
                             targetAdapter.currentList[targetPosition]?.let {
-                                val item = getItem(originPosition)
-                                val setList = onSetItem(
+                                onSetAnimation(
                                     originAdapter,
+                                    targetAdapter,
+                                    targetRecyclerView,
                                     targetAdapter.currentList,
                                     originAdapter.currentList,
-                                    originAdapter.currentList[originPosition],
-                                    originPosition,
-                                    targetPosition
-                                )
-
-                                Log.d("sss","originItem:${ originAdapter.currentList[originPosition]}")
-
-                                onSetTest(
-                                    false,
-                                    setList.first,
-                                    setList.second,
                                     originAdapter.currentList[originPosition],
                                     originPosition,
                                     targetPosition
@@ -100,11 +84,10 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
                     }
 
                     DragEvent.ACTION_DROP -> {
-                        Log.d("sss", "action_drop")
                         if (sameRecyclerView) {
                             if (isSwappable && targetPosition >= 0) {
-                                val swpList = onSwapItem(originPosition, targetPosition)
-                                originAdapter.onSwap(true, swpList)
+                                val swpList = onSwapAnimation(originPosition, targetPosition)
+                                onSwap(swpList)
                             } else {
                                 return@OnDragListener false
                             }
@@ -112,10 +95,12 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
                             if (!isSwappable) {
                                 return@OnDragListener false
                             }
+
                             targetAdapter.currentList[targetPosition]?.let {
-                                val item = getItem(originPosition)
-                                val setList = onSetItem(
+                                val setList = onSetAnimation(
                                     originAdapter,
+                                    targetAdapter,
+                                    targetRecyclerView,
                                     targetAdapter.currentList,
                                     originAdapter.currentList,
                                     originAdapter.currentList[originPosition],
@@ -123,8 +108,7 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
                                     targetPosition
                                 )
 
-                                onSetTest(
-                                    true,
+                                onSet(
                                     setList.first,
                                     setList.second,
                                     originAdapter.currentList[originPosition],
@@ -144,7 +128,7 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
 
                     DragEvent.ACTION_DRAG_EXITED -> {
                         Log.d("sss", "ACTION_DRAG_EXITED")
-//                        submitList(targetAdapter.currentList)
+                        checkTheItemOutArea()
                         return@OnDragListener false
                     }
 
@@ -156,11 +140,27 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
         true
     }
 
+//    private fun test(
+//        callback: ((dragEvent: Int) -> Unit)? = null
+//    ) {
+//        callback?.invoke(DragEvent.ACTION_DRAG_STARTED)?: run {
+//
+//        }
+//    }
+
+    private fun setTest(originAdapter: RecyclerViewDragAdapter<T, VH>, originPos: Int) {
+        val list = originAdapter.currentList.toMutableList()
+        list.removeAt(originPos)
+        originAdapter.submitList(list)
+    }
+
     /**
-     * set
+     * set ( difference recyclerview )
      * */
-    private fun onSetItem(
+    private fun onSetAnimation(
         originAdapter: RecyclerViewDragAdapter<T, VH>,
+        targetAdapter: RecyclerViewDragAdapter<T, VH>,
+        targetRecyclerView: RecyclerView,
         targetList: List<T>,
         originList: List<T>,
         originItem: T,
@@ -170,11 +170,12 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
         return when (dragType()) {
             DragType.ONEBYONE -> {
                 val temp = setOneByOne(originAdapter, targetList, originList, originItem, from, to)
+                originAdapter.submitList(temp.second)
                 temp.first to temp.second
             }
 
             DragType.SHIFT -> {
-                val temp = shiftSetItem(targetList, originList, originItem, from, to)
+                val temp = setShift(targetAdapter, targetRecyclerView, targetList, originList, originItem, from, to)
                 submitList(temp.first)
                 temp.first to temp.second
             }
@@ -193,9 +194,10 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
         target.add(to, originItem)
 
         val origin = originList.toMutableList()
-        origin.remove(originItem)
-        Log.d("sss", "target:${target}")
-        return Pair(target, originList)
+        origin.removeAt(from)
+
+        Log.d("sss","originItem:${originItem}")
+        return Pair(target, origin)
     }
 
     /**
@@ -203,7 +205,9 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
      * target[to] view alpha -> 0f
      *
      * */
-    private fun shiftSetItem(
+    private fun setShift(
+        targetAdapter: RecyclerViewDragAdapter<T,VH>,
+        targetRecyclerView: RecyclerView,
         targetList: List<T>,
         originList: List<T>,
         originItem: T,
@@ -212,13 +216,14 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
     ): Pair<MutableList<T>, MutableList<T>> {
         val tempList = targetList.toMutableList()
         val bottomList = originList.toMutableList()
+
         if (!targetList.contains(originItem)) {
-//            bottomList.removeAt(from)
             tempList.add(to, originItem)
         } else {
             if (targetList.indexOf(originItem) < to) {
                 for (i in targetList.indexOf(originItem) until to) {
                     Collections.swap(tempList, i, i + 1)
+
                 }
             } else {
                 for (i in targetList.indexOf(originItem) downTo to + 1) {
@@ -229,17 +234,28 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
         return tempList to bottomList
     }
 
+    override fun onCurrentListChanged(previousList: MutableList<T>, currentList: MutableList<T>) {
+        Log.d("sss","previousList:${previousList}, currentList:${currentList}")
+        this.previousList = previousList
+    }
+
+
+
+    private fun checkTheItemOutArea() {
+
+    }
+
     /**
-     * swap
+     * swap  (same recyclerview)
      * */
-    private fun onSwapItem(from: Int, to: Int): List<T> {
+    private fun onSwapAnimation(from: Int, to: Int): List<T> {
         val swapItemList = currentList.toMutableList()
         when (dragType()) {
             DragType.ONEBYONE -> {
                 swapOneByOne(swapItemList, from, to)
             }
             DragType.SHIFT -> {
-                shiftSwapItem(swapItemList, from, to)
+                swapShift(swapItemList, from, to)
                 submitList(swapItemList)
             }
         }
@@ -254,7 +270,7 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
         return Collections.swap(list, from, to)
     }
 
-    private fun shiftSwapItem(list: MutableList<T?>, from: Int, to: Int) {
+    private fun swapShift(list: MutableList<T?>, from: Int, to: Int) {
         return if (from < to) {
             for (i in from until to) {
                 Collections.swap(list, i, i + 1)
@@ -267,12 +283,22 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
     }
 
     private fun setDefaultViewColor(view: View, value: Float) {
-        when (originViewType()) {
-            ViewType.TRANSPARENT -> {
-                view.alpha = value
+//        when (originViewType()) {
+//            ViewType.TRANSPARENT -> {
+//                view.alpha = value
+//                view.invalidate()
+//            }
+//            ViewType.CLEARLY -> {
+//                return
+//            }
+//        }
+
+        when (dragType()) {
+            DragType.SHIFT -> {
+                view.alpha = MIN
             }
-            ViewType.CLEARLY -> {
-                return
+            DragType.ONEBYONE -> {
+                view.alpha = MAX
             }
         }
     }
@@ -285,10 +311,7 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
 
     abstract fun onRemove(item: T)
 
-    abstract fun onSet(isDrop: Boolean, from: Int, to: Int, item: T)
-
-    abstract fun onSetTest(
-        isDrop: Boolean,
+    abstract fun onSet(
         targetList: List<T>,
         originList: List<T>,
         originItem: T,
@@ -296,9 +319,7 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
         to: Int
     )
 
-    abstract fun onSwap(isDrop: Boolean, from: Int, to: Int)
-
-    abstract fun onSwap(isDrop: Boolean, list: List<T>)
+    abstract fun onSwap(list: List<T>)
 
     companion object {
         const val MAX = 1f

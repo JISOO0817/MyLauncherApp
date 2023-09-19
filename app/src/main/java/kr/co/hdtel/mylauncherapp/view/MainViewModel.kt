@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import kr.co.hdtel.mylauncherapp.data.DataInfo
 
 class MainViewModel : ViewModel() {
-
     private val _topItems = MutableLiveData<List<DataInfo?>?>()
     val topItems: LiveData<List<DataInfo?>?> = _topItems
 
@@ -40,19 +39,12 @@ class MainViewModel : ViewModel() {
 
     fun onItemSet(targetList: List<DataInfo>, originList: List<DataInfo>, originItem: DataInfo, from: Int, to: Int) {
         Log.d("sss", "viewModel onItemSet targetList:${targetList}")
+
         val topList = targetList.apply {
             this[to].container = DataInfo.CONTAINER_TOP
         }
-//
-        Log.d("sss", "viewModel onItemSet topList:${topList}")
-        _topItems.value = topList
-//
 
-//        val bottomItems = _bottomItems.value?.toMutableList()
-//        bottomItems?.let {
-//            it.removeAt(from)
-//        }
-//
+        _topItems.value = topList
         _bottomItems.value = originList
     }
 }
