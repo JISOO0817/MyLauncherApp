@@ -13,27 +13,22 @@ import android.util.Log
 import android.view.DragEvent
 import android.view.View
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import java.util.*
-
 
 abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
     diffUtil: DiffUtil.ItemCallback<T>,
 ) : ListAdapter<T, VH>(diffUtil) {
     abstract val isSwappable: Boolean
 
-    //    private var returnState = 0
-    private var isOut = false
     private var globalX = 0f
     private var globalY = 0f
-    private var adjustedX = 0f
-    private var adjustedY = 0f
+//    private var adjustedX = 0f
+//    private var adjustedY = 0f
 
     val dragListener = View.OnDragListener { view, event ->
         event?.let {
-//            Log.d("sss","else... x:${globalX}, y:${globalY}")
 
             val originView = it.localState as View
             val originRecyclerView = originView.parent as RecyclerView?
@@ -68,32 +63,9 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
                         view.getLocationOnScreen(location)
                         globalX = location[0] + event.x
                         globalY = location[1] + event.y
-
-                        Log.d("sss", "X:${globalX}, Y:${globalY}")
-
-                        val x = event.x
-                        val y = event.y
-
-                        // 아이템 간격을 고려하여 좌표 보정
-
-                        // 아이템 간격을 고려하여 좌표 보정
-                        val layoutManager = originRV.layoutManager as GridLayoutManager
-                        val spanCount = layoutManager.spanCount
-                        val itemWidth: Int = originRV.width / spanCount
-                        val itemHeight: Int = originRV.height / spanCount
-                        val column = (x / itemWidth).toInt()
-                        val row = (y / itemHeight).toInt()
-
-
-                        adjustedX = (column * itemWidth + itemWidth / 2).toFloat()
-                        adjustedY = (row * itemHeight + itemHeight / 2).toFloat()
-
-                        Log.d("sss","adjustedX:${adjustedX}, adjustedY:${adjustedY}")
                     }
 
                     DragEvent.ACTION_DRAG_ENTERED -> {
-
-
                         Log.d("sss", "ACTION_DRAG_ENTERED")
                         if (!isSwappable || targetPosition < 0) {
                             return@OnDragListener false
@@ -113,7 +85,6 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
                             targetRecyclerView.hideItemIfTagMatches(
                                 targetPosition, originAdapter.currentList[originPosition]
                             )
-//                                returnState = 1
                         }
                     }
 
@@ -138,9 +109,6 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
                                 targetPosition
                             )
 
-                            /**
-                             * 삭제될아이템 (origin)
-                             * */
                             val tempList = originAdapter.currentList.toMutableList()
                             tempList.removeAt(originPosition)
                             originAdapter.submitList(tempList)
@@ -164,32 +132,28 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
                                 targetPosition, originAdapter.currentList[originPosition]
                             )
                         }
-
                         return@OnDragListener true
                     }
 
                     DragEvent.ACTION_DRAG_ENDED -> {
+                        Log.d
                         originView.setDefaultViewColor(MAX)
                         return@OnDragListener true
                     }
 
                     DragEvent.ACTION_DRAG_EXITED -> {
                         Log.d("sss", "ACTION_DRAG_EXITED")
-                        // x와y좌표가 리사이클러뷰 내부에 있지 않은 경우만 원상복귀
-                        // false이면 리스트 새로고침
-                        if (targetRecyclerView.checkIsOutSide(globalX, globalY)) {
-                            Log.d("sss", "recyclerview가 아닙니다.")
+                        if (targetRecyclerView.checkIsOutSide(globalX, globalY) && isSwappable) {
+                            Log.d("ata", "is not recyclerview")
                             val tempList = targetAdapter.currentList.toMutableList()
                             tempList.remove(originAdapter.currentList[originPosition])
-                            Log.d("sss", "제거할 아이템:${originAdapter.currentList[originPosition]}")
                             targetAdapter.submitList(tempList)
                         }
-
-                        return@OnDragListener false
+                        return@OnDragListener true
                     }
 
                     else -> {
-                        Log.d("sss","else...")
+                        Log.d("sss", "else...")
                         return@OnDragListener false
                     }
                 }
@@ -198,28 +162,27 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
         true
     }
 
-    private fun RecyclerView.hideItemIfTagMatches(position: Int, tag: Any?) {
+    private fun RecyclerView.updateItemVisibility(position: Int, tag: Any?, visible: Boolean) {
         val viewHolder = findViewHolderForAdapterPosition(position)
-        viewHolder?.itemView?.visibility =
-            if (viewHolder?.itemView?.tag == tag) View.INVISIBLE else View.VISIBLE
+        viewHolder?.itemView?.visibility = if (viewHolder?.itemView?.tag == tag) {
+            if (visible) View.VISIBLE else View.INVISIBLE
+        } else {
+            if (visible) View.INVISIBLE else View.VISIBLE
+        }
+    }
+
+    private fun RecyclerView.hideItemIfTagMatches(position: Int, tag: Any?) {
+        updateItemVisibility(position, tag, visible = false)
     }
 
     private fun RecyclerView.showItemIfTagMatches(position: Int, tag: Any?) {
-        val viewHolder = findViewHolderForAdapterPosition(position)
-        viewHolder?.itemView?.visibility =
-            if (viewHolder?.itemView?.tag == tag) View.VISIBLE else View.INVISIBLE
+        updateItemVisibility(position, tag, visible = true)
     }
 
     private fun RecyclerView.checkIsOutSide(x: Float, y: Float): Boolean {
-        val location = IntArray(2)
-        this.getLocationOnScreen(location)
-        val left = location[0]
-        val top = location[1]
-        val right = left + this.width
-        val bottom = top + this.height
-
-        Log.d("sss","left:${left}, right:${right}, top:${top}, bottom:${bottom}")
-        //아래 return값에 대해서 하나라도 만족하면 리사이클러뷰 밖에 있는 것
+        getLocationOnScreen(IntArray(2))
+        val right = IntArray(2)[0] + width
+        val bottom = IntArray(2)[1] + height
         return x < left || x > right || y < top || y > bottom
     }
 
@@ -236,14 +199,14 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
         return when (dragType()) {
             DragType.ONEBYONE -> {
                 setOneByOne(targetList, originList, originItem, from, to).run {
-                    this.first to this.second
+                    first to second
                 }
             }
 
             DragType.SHIFT -> {
                 setShift(targetList, originList, originItem, to).run {
-                    submitList(this.first)
-                    this.first to this.second
+                    submitList(first)
+                    first to second
                 }
             }
         }
@@ -256,12 +219,12 @@ abstract class RecyclerViewDragAdapter<T, VH : RecyclerView.ViewHolder>(
         from: Int,
         to: Int
     ): Pair<List<T>, List<T>> {
-        val target = targetList.toMutableList().also {
-            it.add(to, originItem)
+        val target = targetList.toMutableList().apply {
+            add(to, originItem)
         }
 
-        val origin = originList.toMutableList().also {
-            it.removeAt(from)
+        val origin = originList.toMutableList().apply {
+            removeAt(from)
         }
 
         return Pair(target, origin)

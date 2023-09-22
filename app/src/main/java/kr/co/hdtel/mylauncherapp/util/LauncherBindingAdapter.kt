@@ -1,6 +1,5 @@
 package kr.co.hdtel.mylauncherapp.util
 
-import android.util.Log
 import androidx.databinding.BindingAdapter
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
